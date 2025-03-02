@@ -1,12 +1,13 @@
 # Кэш 
 __pycache__/
+*.py[cod]
+*$py.class
 
 # IDE
 .idea
 .vscode
 
 # Рабочее окружение
-.venv
-
-dist
-build
+# .venv
+# dist
+# build
