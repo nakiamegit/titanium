@@ -1,0 +1,11 @@
+# Кэш 
+__pycache__/
+
+# IDE
+.idea
+.vscode
+
+# Рабочее окружение
+.venv
+
+dist
