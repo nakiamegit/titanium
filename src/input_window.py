@@ -35,7 +35,7 @@ class DirectoryWatcher(FileSystemEventHandler):
 
 
 class GradientFrame(QFrame):
-    """Кастомный QFrame с градиентным фоном."""
+    """Кастомный QFrame"""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -68,7 +68,7 @@ class InputWindow(QMainWindow):
         window_width = self.config.get("Window", "width", default="1280")
         window_height = self.config.get("Window", "height", default="1024")
         min_width = self.config.get_int("Window", "min_width", default=800)
-        min_height = self.config.get_int("Window", "min_height", default=600)
+        min_height = self.config.get_int("Window", "min_height", default=850)
 
         self.setGeometry(100, 100, int(window_width), int(window_height))
         self.setMinimumSize(min_width, min_height)
@@ -126,7 +126,7 @@ class InputWindow(QMainWindow):
         layout.setContentsMargins(40, 40, 40, 40)
 
         # Заголовок
-        title_label = QLabel("Анализ участка")
+        title_label = QLabel(self.config.get("Messages", "title"))
         title_label.setFont(QFont("Roboto", 24, QFont.Bold))
         title_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(title_label)
@@ -150,11 +150,11 @@ class InputWindow(QMainWindow):
         input_layout.setColumnStretch(1, 1)
 
         # Поля для ввода данных
-        self.min_lat_entry = self.create_input_field("Минимальная широта", "min_lat", self.get_range("latitude"))
-        self.max_lat_entry = self.create_input_field("Максимальная широта", "max_lat", self.get_range("latitude"))
-        self.min_lon_entry = self.create_input_field("Минимальная долгота", "min_lon", self.get_range("longitude"))
-        self.max_lon_entry = self.create_input_field("Максимальная долгота", "max_lon", self.get_range("longitude"))
-        self.radius_entry = self.create_input_field("Радиус (м)", "radius", validate_positive=True)
+        self.min_lat_entry = self.create_input_field(self.config.get("Messages", "min_lat"), "min_lat", self.get_range("latitude"))
+        self.max_lat_entry = self.create_input_field(self.config.get("Messages", "max_lat"), "max_lat", self.get_range("latitude"))
+        self.min_lon_entry = self.create_input_field(self.config.get("Messages", "min_lon"), "min_lon", self.get_range("longitude"))
+        self.max_lon_entry = self.create_input_field(self.config.get("Messages", "max_lon"), "max_lon", self.get_range("longitude"))
+        self.radius_entry = self.create_input_field(self.config.get("Messages", "radius"), "radius", validate_positive=True)
 
         input_layout.addWidget(self.min_lat_entry, 0, 0)
         input_layout.addWidget(self.max_lat_entry, 0, 1)
@@ -163,7 +163,7 @@ class InputWindow(QMainWindow):
         input_layout.addWidget(self.radius_entry, 2, 0)
 
         # Поле для выбора директории
-        dir_label = QLabel("Выберите директорию")
+        dir_label = QLabel(self.config.get("Messages", "select_directory"))
         dir_label.setFont(QFont("Roboto", 12))
         input_layout.addWidget(dir_label, 3, 0, 1, 2)  # Подпись занимает две колонки
 
@@ -176,17 +176,17 @@ class InputWindow(QMainWindow):
         # Кнопка для выбора директории
         dir_button = QPushButton("Обзор")
         dir_button.setFont(QFont("Roboto", 12))
-        dir_button.setIcon(QIcon("folder_icon.png"))  # Укажите путь к иконке
+        dir_button.setIcon(QIcon("folder_icon.png"))
         dir_button.setIconSize(QSize(16, 16))
-        dir_button.setToolTip("Выберите директорию")
+        dir_button.setToolTip(self.config.get("Messages", "select_directory"))
         dir_button.clicked.connect(self.select_directory)
         dir_layout.addWidget(dir_button)
 
-        input_layout.addLayout(dir_layout, 4, 0, 1, 2)  # Поле и кнопка занимают две колонки
+        input_layout.addLayout(dir_layout, 4, 0, 1, 2)
         layout.addWidget(input_card)
 
         # Кнопка "Запустить анализ"
-        self.run_button = QPushButton("Запустить анализ")
+        self.run_button = QPushButton(self.config.get("Messages", "run_analysis"))
         self.run_button.setFont(QFont("Roboto", 14, QFont.Bold))
         self.run_button.clicked.connect(self.run_analysis)
         layout.addWidget(self.run_button)
@@ -215,11 +215,11 @@ class InputWindow(QMainWindow):
             palette.setBrush(QPalette.Background, QBrush(pixmap.scaled(self.size(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation)))
             self.setPalette(palette)
         else:
-            print(f"Ошибка: Не удалось загрузить изображение {image_path}")
+            print(self.config.get("Error", "error_img_not_found") + image_path)
 
     def resizeEvent(self, event):
         """Переопределяем метод для изменения фона при изменении размера окна."""
-        background_image = self.config.get("Window", "background_image", default="background.jpg")
+        background_image = self.config.get("Window", "background_image")
         self.set_background_image(background_image)
         super().resizeEvent(event)
 
@@ -255,13 +255,13 @@ class InputWindow(QMainWindow):
 
         if isinstance(error, str):
             entry.setStyleSheet("border: 1px solid red;")  # Подсвечиваем поле красным
-            QMessageBox.critical(self, "Ошибка", error)  # Показываем ошибку в QMessageBox
+            QMessageBox.critical(self, self.config.get("Error", "error"), error)  # Показываем ошибку в QMessageBox
         else:
             entry.setStyleSheet("")  # Убираем подсветку
 
     def select_directory(self):
         """Открывает диалог выбора директории."""
-        directory = QFileDialog.getExistingDirectory(self, "Выберите директорию")
+        directory = QFileDialog.getExistingDirectory(self, self.config.get("Messages", "select_directory"))
         if directory:
             self.dir_entry.setText(directory)
 
@@ -281,7 +281,7 @@ class InputWindow(QMainWindow):
                 if not value or not validate_number(value, validate_range, validate_positive):
                     error_message = custom_error or self.config.get("Error", "error_invalid_number")
                     entry.setStyleSheet("border: 1px solid red;")
-                    QMessageBox.critical(self, "Ошибка", error_message)  # Показываем ошибку в QMessageBox
+                    QMessageBox.critical(self, self.config.get("Error", "error"), error_message)
                     return False
                 return True
 
@@ -292,7 +292,7 @@ class InputWindow(QMainWindow):
                 check_and_set_error(self.min_lon_entry.findChild(QLineEdit), min_lon, validate_range=self.get_range("longitude"), custom_error=self.config.get("Error", "error_longitude_range")) and
                 check_and_set_error(self.max_lon_entry.findChild(QLineEdit), max_lon, validate_range=self.get_range("longitude"), custom_error=self.config.get("Error", "error_longitude_range")) and
                 check_and_set_error(self.radius_entry.findChild(QLineEdit), radius_in_meters, validate_positive=True, custom_error=self.config.get("Error", "error_positive_number")) and
-                bool(directory)  # Директория должна быть указана
+                bool(directory)
             )
 
             if not is_valid:
@@ -308,10 +308,10 @@ class InputWindow(QMainWindow):
 
             # Дополнительные проверки
             if self.current_min_lat >= self.current_max_lat:
-                QMessageBox.critical(self, "Ошибка", self.config.get("Error", "error_min_max_lat"))
+                QMessageBox.critical(self, self.config.get("Error", "error"), self.config.get("Error", "error_min_max_lat"))
                 return
             if self.current_min_lon >= self.current_max_lon:
-                QMessageBox.critical(self, "Ошибка", self.config.get("Error", "error_min_max_lon"))
+                QMessageBox.critical(self, self.config.get("Error", "error"), self.config.get("Error", "error_min_max_lon"))
                 return
 
             # Выполняем анализ
@@ -326,9 +326,9 @@ class InputWindow(QMainWindow):
             self.start_directory_watcher(directory)
 
         except ValueError as e:
-            QMessageBox.critical(self, "Ошибка", str(e))
+            QMessageBox.critical(self, self.config.get("Error", "error"), str(e))
         except Exception as e:
-            QMessageBox.critical(self, "Неизвестная ошибка", str(e))
+            QMessageBox.critical(self, self.config.get("Error", "error_unknown"), str(e))
 
     def start_directory_watcher(self, directory):
         """Запускает наблюдатель за директорией."""
@@ -359,7 +359,7 @@ class InputWindow(QMainWindow):
             # Обновляем карту
             self.map_window.browser.setUrl(QUrl.fromLocalFile(visualize_grid(grid, self.current_min_lat, self.current_max_lat, self.current_min_lon, self.current_max_lon)))
         except Exception as e:
-            print(f"Ошибка при обновлении карты: {e}")
+            print(self.config.get("Error", "error_map_update") + e)
 
     def closeEvent(self, event):
         """Останавливает наблюдатель при закрытии окна."""
